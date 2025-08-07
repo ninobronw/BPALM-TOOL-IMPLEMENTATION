@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPALM Regime Preparedness Assessment Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6610f2;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--secondary-color) !important;
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: none;
+            margin-bottom: 24px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: var(--dark-color);
+            font-weight: 600;
+            border-radius: 12px 12px 0 0 !important;
+            border-bottom: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #520dc2;
+            border-color: #520dc2;
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(102, 16, 242, 0.25);
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--dark-color);
+        }
+        
+        .dashboard-card {
+            height: 100%;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .status-met {
+            color: var(--success-color);
+        }
+        
+        .status-partial {
+            color: var(--warning-color);
+        }
+        
+        .status-not-met {
+            color: var(--danger-color);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .report-section {
+            page-break-inside: avoid;
+            margin-bottom: 30px;
+        }
+        
+        .report-title {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .export-btn {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step::before {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: #ddd;
+            z-index: -1;
+        }
+        
+        .step:first-child::before {
+            left: 50%;
+            width: 50%;
+        }
+        
+        .step:last-child::before {
+            left: 0;
+            width: 50%;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .step.active .step-circle {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .step.completed .step-circle {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .benchmark-item {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .benchmark-item.met {
+            border-left-color: var(--success-color);
+        }
+        
+        .benchmark-item.partial {
+            border-left-color: var(--warning-color);
+        }
+        
+        .benchmark-item.not-met {
+            border-left-color: var(--danger-color);
+        }
+        
+        .facility-card {
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .facility-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+        }
+        
+        .facility-body {
+            padding: 20px;
+        }
+        
+        .domain-card {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .domain-header {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .domain-body {
+            padding: 15px;
+        }
+        
+        .language-toggle {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        
+        .language-toggle:hover {
+            background-color: #e9ecef;
+        }
+        
+        .saved-assessment {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .saved-assessment:hover {
+            background-color: #f8f9fa;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 no-print">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-clipboard-check-fill me-2"></i><span data-translate="app-title">BPALM Preparedness Assessment</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('participants')"><span data-translate="nav-participants">Participants</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('country')"><span data-translate="nav-country">Country Info</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('facility')"><span data-translate="nav-facility">Facility Assessment</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('assessment')"><span data-translate="nav-assessment">National Assessment</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('dashboard')"><span data-translate="nav-dashboard">Dashboard</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('report')"><span data-translate="nav-report">Report</span></a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <div class="d-flex align-items-center">
+                            <span class="language-toggle me-2" onclick="toggleLanguage()">EN</span>
+                            <span class="language-toggle" onclick="toggleLanguage()">FR</span>
+                        </div>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="showSavedAssessments()">
+                            <i class="bi bi-folder2-open me-1"></i><span data-translate="nav-saved">Saved</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Step Indicator -->
+        <div class="step-indicator no-print">
+            <div class="step active" id="step-participants">
+                <div class="step-circle">1</div>
+                <div><span data-translate="step-participants">Participants</span></div>
+            </div>
+            <div class="step" id="step-country">
+                <div class="step-circle">2</div>
+                <div><span data-translate="step-country">Country Info</span></div>
+            </div>
+            <div class="step" id="step-facility">
+                <div class="step-circle">3</div>
+                <div><span data-translate="step-facility">Facility</span></div>
+            </div>
+            <div class="step" id="step-assessment">
+                <div class="step-circle">4</div>
+                <div><span data-translate="step-assessment">National</span></div>
+            </div>
+            <div class="step" id="step-dashboard">
+                <div class="step-circle">5</div>
+                <div><span data-translate="step-dashboard">Dashboard</span></div>
+            </div>
+            <div class="step" id="step-report">
+                <div class="step-circle">6</div>
+                <div><span data-translate="step-report">Report</span></div>
+            </div>
+        </div>
+
+        <!-- Participants Section -->
+        <div id="participants-section" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><span data-translate="participants-title">Participants Information</span></h3>
+                </div>
+                <div class="card-body">
+                    <form id="participants-form">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="country" class="form-label"><span data-translate="country-label">Country</span></label>
+                                <input type="text" class="form-control" id="country" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="location" class="form-label"><span data-translate="location-label">Location</span></label>
+                                <input type="text" class="form-control" id="location" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="workshop-date" class="form-label"><span data-translate="workshop-date-label">Date of Workshop</span></label>
+                                <input type="date" class="form-control" id="workshop-date" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="chair" class="form-label"><span data-translate="chair-label">Chair</span></label>
+                                <input type="text" class="form-control" id="chair" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="moderator" class="form-label"><span data-translate="moderator-label">Moderator</span></label>
+                                <input type="text" class="form-control" id="moderator" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="reporter" class="form-label"><span data-translate="reporter-label">Reporter</span></label>
+                                <input type="text" class="form-control" id="reporter" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="assessment-id" class="form-label"><span data-translate="assessment-id-label">Assessment ID</span></label>
+                                <input type="text" class="form-control" id="assessment-id" placeholder="e.g., BLM-2023-001">
+                            </div>
+                        </div>
+                        
+                        <h4 class="mt-4 mb-3"><span data-translate="participants-list-title">Participants</span></h4>
+                        <div id="participants-list">
+                            <div class="participant-item row mb-3">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control participant-name" placeholder="Name" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control participant-org" placeholder="Organization" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="email" class="form-control participant-email" placeholder="Email">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="tel" class="form-control participant-phone" placeholder="Phone">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeParticipant(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary mb-3" onclick="addParticipant()">
+                            <i class="bi bi-plus-circle me-1"></i><span data-translate="add-participant">Add Participant</span>
+                        </button>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" disabled><span data-translate="previous">Previous</span></button>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="saveProgress()">
+                                    <i class="bi bi-save me-1"></i><span data-translate="save-progress">Save Progress</span>
+                                </button>
+                                <button type="submit" class="btn btn-primary"><span data-translate="next-country">Next: Country Information</span></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Country Information Section -->
+        <div id="country-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><span data-translate="country-title">Country Information</span></h3>
+                </div>
+                <div class="card-body">
+                    <form id="country-form">
+                        <h4 class="mb-3"><span data-translate="epidemiology-title">Epidemiology Data</span></h4>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="tb-incidence" class="form-label"><span data-translate="tb-incidence-label">TB Incidence Rate (per 100,000)</span></label>
+                                <input type="number" class="form-control" id="tb-incidence" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dr-tb-prevalence" class="form-label"><span data-translate="dr-tb-prevalence-label">DR-TB Prevalence (%)</span></label>
+                                <input type="number" class="form-control" id="dr-tb-prevalence" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="treatment-success" class="form-label"><span data-translate="treatment-success-label">Current Treatment Success Rate (%)</span></label>
+                                <input type="number" class="form-control" id="treatment-success" min="0" max="100" step="0.1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dr-tb-patients" class="form-label"><span data-translate="dr-tb-patients-label">Number of DR-TB Patients</span></label>
+                                <input type="number" class="form-control" id="dr-tb-patients" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="health-facilities" class="form-label"><span data-translate="health-facilities-label">Healthcare Facilities</span></label>
+                                <input type="number" class="form-control" id="health-facilities" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="balm-experience" class="form-label"><span data-translate="balm-experience-label">Previous BPALM Experience</span></label>
+                                <select class="form-control" id="balm-experience" required>
+                                    <option value=""><span data-translate="select-option">Select...</span></option>
+                                    <option value="none"><span data-translate="experience-none">None</span></option>
+                                    <option value="pilot"><span data-translate="experience-pilot">Pilot Program</span></option>
+                                    <option value="limited"><span data-translate="experience-limited">Limited Implementation</span></option>
+                                    <option value="widespread"><span data-translate="experience-widespread">Widespread Implementation</span></option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="showSection('participants')"><span data-translate="previous">Previous</span></button>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="saveProgress()">
+                                    <i class="bi bi-save me-1"></i><span data-translate="save-progress">Save Progress</span>
+                                </button>
+                                <button type="submit" class="btn btn-primary"><span data-translate="next-facility">Next: Facility Assessment</span></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facility Assessment Section -->
+        <div id="facility-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><span data-translate="facility-title">Facility Assessment</span></h3>
+                </div>
+                <div class="card-body">
+                    <div id="facilities-container">
+                        <!-- Facilities will be dynamically added here -->
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-secondary" onclick="showSection('country')"><span data-translate="previous">Previous</span></button>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="saveProgress()">
+                                <i class="bi bi-save me-1"></i><span data-translate="save-progress">Save Progress</span>
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="showSection('assessment')"><span data-translate="next-assessment">Next: National Assessment</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- National Assessment Section -->
+        <div id="assessment-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><span data-translate="national-title">National Assessment</span></h3>
+                </div>
+                <div class="card-body">
+                    <form id="assessment-form">
+                        <!-- 11 Dimensions of Evaluation -->
+                        <div id="dimensions-container">
+                            <!-- Dimensions will be dynamically added here -->
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="showSection('facility')"><span data-translate="previous">Previous</span></button>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="saveProgress()">
+                                    <i class="bi bi-save me-1"></i><span data-translate="save-progress">Save Progress</span>
+                                </button>
+                                <button type="submit" class="btn btn-primary"><span data-translate="complete-assessment">Complete Assessment</span></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="mb-0"><span data-translate="dashboard-title">Assessment Dashboard</span></h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-4">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body text-center">
+                                            <div class="metric-value status-met" id="overall-score">--</div>
+                                            <div class="metric-label"><span data-translate="overall-score-label">Overall Score</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-4">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body text-center">
+                                            <div class="metric-value" id="met-count">--</div>
+                                            <div class="metric-label"><span data-translate="met-count-label">Standards Met</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-4">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body text-center">
+                                            <div class="metric-value status-partial" id="partial-count">--</div>
+                                            <div class="metric-label"><span data-translate="partial-count-label">Partially Met</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-4">
+                                    <div class="card dashboard-card">
+                                        <div class="card-body text-center">
+                                            <div class="metric-value status-not-met" id="not-met-count">--</div>
+                                            <div class="metric-label"><span data-translate="not-met-count-label">Not Met</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><span data-translate="preparedness-by-category">Preparedness by Category</span></h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="category-chart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><span data-translate="benchmark-status">Benchmark Status Distribution</span></h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="benchmark-chart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><span data-translate="facility-performance">Facility Performance Overview</span></h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="facility-chart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><span data-translate="critical-gaps">Critical Gaps</span></h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="critical-gaps-list">
+                                                <p class="text-muted"><span data-translate="no-critical-gaps">No critical gaps identified</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between no-print">
+                <button type="button" class="btn btn-secondary" onclick="showSection('assessment')"><span data-translate="previous">Previous</button>
+                <div>
+                    <button type="button" class="btn btn-primary" onclick="showSection('report')"><span data-translate="view-report">View Report</span></button>
+                    <button type="button" class="btn btn-success" onclick="exportResults()"><span data-translate="export-results">Export Results</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Section -->
+        <div id="report-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><span data-translate="report-title">Assessment Report</span></h3>
+                    <div class="no-print">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i><span data-translate="print">Print</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="exportToPDF()">
+                            <i class="bi bi-file-earmark-pdf me-1"></i><span data-translate="pdf">PDF</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" id="report-content">
+                    <!-- Report content will be dynamically generated -->
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4 no-print">
+                <button type="button" class="btn btn-secondary" onclick="showSection('dashboard')"><span data-translate="previous">Previous</button>
+                <div>
+                    <button type="button" class="btn btn-primary export-btn" onclick="exportToPDF()">
+                        <i class="bi bi-file-earmark-pdf me-1"></i><span data-translate="export-pdf">Export to PDF</span>
+                    </button>
+                    <button type="button" class="btn btn-primary export-btn" onclick="exportToExcel()">
+                        <i class="bi bi-file-earmark-excel me-1"></i><span data-translate="export-excel">Export to Excel</span>
+                    </button>
+                    <button type="button" class="btn btn-primary export-btn" onclick="exportToPowerPoint()">
+                        <i class="bi bi-file-earmark-ppt me-1"></i><span data-translate="export-ppt">Export to PowerPoint</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Assessments Modal -->
+    <div class="modal fade" id="savedAssessmentsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><span data-translate="saved-assessments-title">Saved Assessments</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="saved-assessments-list">
+                        <!-- Saved assessments will be listed here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-translate="close">Close</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Translation data
+        const translations = {
+            en: {
+                "app-title": "BPALM Preparedness Assessment",
+                "nav-participants": "Participants",
+                "nav-country": "Country Info",
+                "nav-facility": "Facility Assessment",
+                "nav-assessment": "National Assessment",
+                "nav-dashboard": "Dashboard",
+                "nav-report": "Report",
+                "nav-saved": "Saved",
+                "step-participants": "Participants",
+                "step-country": "Country Info",
+                "step-facility": "Facility",
+                "step-assessment": "National",
+                "step-dashboard": "Dashboard",
+                "step-report": "Report",
+                "participants-title": "Participants Information",
+                "country-label": "Country",
+                "location-label": "Location",
+                "workshop-date-label": "Date of Workshop",
+                "chair-label": "Chair",
+                "moderator-label": "Moderator",
+                "reporter-label": "Reporter",
+                "assessment-id-label": "Assessment ID",
+                "participants-list-title": "Participants",
+                "add-participant": "Add Participant",
+                "save-progress": "Save Progress",
+                "next-country": "Next: Country Information",
+                "previous": "Previous",
+                "country-title": "Country Information",
+                "epidemiology-title": "Epidemiology Data",
+                "tb-incidence-label": "TB Incidence Rate (per 100,000)",
+                "dr-tb-prevalence-label": "DR-TB Prevalence (%)",
+                "treatment-success-label": "Current Treatment Success Rate (%)",
+                "dr-tb-patients-label": "Number of DR-TB Patients",
+                "health-facilities-label": "Healthcare Facilities",
+                "balm-experience-label": "Previous BPALM Experience",
+                "select-option": "Select...",
+                "experience-none": "None",
+                "experience-pilot": "Pilot Program",
+                "experience-limited": "Limited Implementation",
+                "experience-widespread": "Widespread Implementation",
+                "next-facility": "Next: Facility Assessment",
+                "facility-title": "Facility Assessment",
+                "add-facility": "Add Facility",
+                "facility-name-label": "Facility Name",
+                "facility-type-label": "Facility Type",
+                "facility-location-label": "Facility Location",
+                "facility-district-label": "District",
+                "facility-responsible-label": "Responsible Person",
+                "facility-contact-label": "Contact Information",
+                "next-assessment": "Next: National Assessment",
+                "national-title": "National Assessment",
+                "complete-assessment": "Complete Assessment",
+                "dashboard-title": "Assessment Dashboard",
+                "overall-score-label": "Overall Score",
+                "met-count-label": "Standards Met",
+                "partial-count-label": "Partially Met",
+                "not-met-count-label": "Not Met",
+                "preparedness-by-category": "Preparedness by Category",
+                "benchmark-status": "Benchmark Status Distribution",
+                "facility-performance": "Facility Performance Overview",
+                "critical-gaps": "Critical Gaps",
+                "no-critical-gaps": "No critical gaps identified",
+                "view-report": "View Report",
+                "export-results": "Export Results",
+                "report-title": "Assessment Report",
+                "print": "Print",
+                "pdf": "PDF",
+                "export-pdf": "Export to PDF",
+                "export-excel": "Export to Excel",
+                "export-ppt": "Export to PowerPoint",
+                "saved-assessments-title": "Saved Assessments",
+                "close": "Close",
+                "domain-governance": "Governance and Leadership",
+                "domain-finance": "Financial Management",
+                "domain-supply": "Supply Chain Management",
+                "domain-hr": "Human Resources",
+                "domain-lab": "Laboratory Services",
+                "domain-clinical": "Clinical Management",
+                "domain-pharmacy": "Pharmacy Services",
+                "domain-m-e": "Monitoring and Evaluation",
+                "domain-community": "Community Engagement",
+                "domain-infection": "Infection Prevention and Control",
+                "domain-data": "Data Management",
+                "domain-research": "Operational Research",
+                "dimension-policy": "Policy and Regulatory Framework",
+                "dimension-coordination": "Stakeholder Coordination",
+                "dimension-capacity": "Capacity Building",
+                "dimension-diagnostic": "Diagnostic Standards",
+                "dimension-treatment": "Treatment Access",
+                "dimension-monitoring": "Monitoring and Evaluation",
+                "dimension-supervision": "Supervision and Mentorship",
+                "dimension-advocacy": "Advocacy and Communication",
+                "dimension-research": "Research and Innovation",
+                "dimension-partnership": "Partnership and Resource Mobilization",
+                "dimension-sustainability": "Sustainability Planning",
+                "status-met": "Met",
+                "status-partial": "Partially Met",
+                "status-not-met": "Not Met",
+                "status-na": "Not Applicable",
+                "describe-situation": "Describe the current situation",
+                "action-plan": "Action Plan",
+                "responsible": "Responsible",
+                "timeline": "Timeline",
+                "add-another-facility": "Add Another Facility",
+                "finish-facility": "Finish Facility Assessment",
+                "facility-type-hospital": "Hospital",
+                "facility-type-clinic": "Clinic",
+                "facility-type-health-center": "Health Center",
+                "facility-type-lab": "Laboratory",
+                "facility-type-other": "Other"
+            },
+            fr: {
+                "app-title": "Évaluation de Préparation BPALM",
+                "nav-participants": "Participants",
+                "nav-country": "Infos Pays",
+                "nav-facility": "Évaluation des Établissements",
+                "nav-assessment": "Évaluation Nationale",
+                "nav-dashboard": "Tableau de Bord",
+                "nav-report": "Rapport",
+                "nav-saved": "Enregistrés",
+                "step-participants": "Participants",
+                "step-country": "Infos Pays",
+                "step-facility": "Établissements",
+                "step-assessment": "National",
+                "step-dashboard": "Tableau de Bord",
+                "step-report": "Rapport",
+                "participants-title": "Informations des Participants",
+                "country-label": "Pays",
+                "location-label": "Lieu",
+                "workshop-date-label": "Date de l'Atelier",
+                "chair-label": "Président",
+                "moderator-label": "Modérateur",
+                "reporter-label": "Rapporteur",
+                "assessment-id-label": "ID d'Évaluation",
+                "participants-list-title": "Participants",
+                "add-participant": "Ajouter Participant",
+                "save-progress": "Sauvegarder Progrès",
+                "next-country": "Suivant: Informations Pays",
+                "previous": "Précédent",
+                "country-title": "Informations du Pays",
+                "epidemiology-title": "Données Épidémiologiques",
+                "tb-incidence-label": "Taux d'Incidence de la TB (pour 100 000)",
+                "dr-tb-prevalence-label": "Prévalence de la TB-DR (%)",
+                "treatment-success-label": "Taux de Succès du Traitement Actuel (%)",
+                "dr-tb-patients-label": "Nombre de Patients TB-DR",
+                "health-facilities-label": "Établissements de Santé",
+                "balm-experience-label": "Expérience Antérieure BPALM",
+                "select-option": "Sélectionner...",
+                "experience-none": "Aucune",
+                "experience-pilot": "Programme Pilote",
+                "experience-limited": "Mise en Œuvre Limitée",
+                "experience-widespread": "Mise en Œuvre Étendue",
+                "next-facility": "Suivant: Évaluation des Établissements",
+                "facility-title": "Évaluation des Établissements",
+                "add-facility": "Ajouter Établissement",
+                "facility-name-label": "Nom de l'Établissement",
+                "facility-type-label": "Type d'Établissement",
+                "facility-location-label": "Emplacement de l'Établissement",
+                "facility-district-label": "District",
+                "facility-responsible-label": "Personne Responsable",
+                "facility-contact-label": "Informations de Contact",
+                "next-assessment": "Suivant: Évaluation Nationale",
+                "national-title": "Évaluation Nationale",
+                "complete-assessment": "Terminer l'Évaluation",
+                "dashboard-title": "Tableau de Bord de l'Évaluation",
+                "overall-score-label": "Score Global",
+                "met-count-label": "Normes Respectées",
+                "partial-count-label": "Partiellement Respectées",
+                "not-met-count-label": "Non Respectées",
+                "preparedness-by-category": "Préparation par Catégorie",
+                "benchmark-status": "Distribution du Statut des Références",
+                "facility-performance": "Aperçu de la Performance des Établissements",
+                "critical-gaps": "Écarts Critiques",
+                "no-critical-gaps": "Aucun écart critique identifié",
+                "view-report": "Voir le Rapport",
+                "export-results": "Exporter les Résultats",
+                "report-title": "Rapport d'Évaluation",
+                "print": "Imprimer",
+                "pdf": "PDF",
+                "export-pdf": "Exporter en PDF",
+                "export-excel": "Exporter en Excel",
+                "export-ppt": "Exporter en PowerPoint",
+                "saved-assessments-title": "Évaluations Enregistrées",
+                "close": "Fermer",
+                "domain-governance": "Gouvernance et Leadership",
+                "domain-finance": "Gestion Financière",
+                "domain-supply": "Gestion de la Chaîne d'Approvisionnement",
+                "domain-hr": "Ressources Humaines",
+                "domain-lab": "Services de Laboratoire",
+                "domain-clinical": "Gestion Clinique",
+                "domain-pharmacy": "Services de Pharmacie",
+                "domain-m-e": "Suivi et Évaluation",
+                "domain-community": "Engagement Communautaire",
+                "domain-infection": "Prévention et Contrôle des Infections",
+                "domain-data": "Gestion des Données",
+                "domain-research": "Recherche Opérationnelle",
+                "dimension-policy": "Cadre Politique et Réglementaire",
+                "dimension-coordination": "Coordination des Parties Prenantes",
+                "dimension-capacity": "Renforcement des Capacités",
+                "dimension-diagnostic": "Normes de Diagnostic",
+                "dimension-treatment": "Accès au Traitement",
+                "dimension-monitoring": "Suivi et Évaluation",
+                "dimension-supervision": "Supervision et Mentorat",
+                "dimension-advocacy": "Plaidoyer et Communication",
+                "dimension-research": "Recherche et Innovation",
+                "dimension-partnership": "Partenariat et Mobilisation des Ressources",
+                "dimension-sustainability": "Planification de la Durabilité",
+                "status-met": "Respecté",
+                "status-partial": "Partiellement Respecté",
+                "status-not-met": "Non Respecté",
+                "status-na": "Non Applicable",
+                "describe-situation": "Décrire la situation actuelle",
+                "action-plan": "Plan d'Action",
+                "responsible": "Responsable",
+                "timeline": "Calendrier",
+                "add-another-facility": "Ajouter un Autre Établissement",
+                "finish-facility": "Terminer l'Évaluation des Établissements",
+                "facility-type-hospital": "Hôpital",
+                "facility-type-clinic": "Clinique",
+                "facility-type-health-center": "Centre de Santé",
+                "facility-type-lab": "Laboratoire",
+                "facility-type-other": "Autre"
+            }
+        };
+
+        // Current language
+        let currentLanguage = 'en';
+
+        // Facility domains (12 domains)
+        const facilityDomains = [
+            {
+                id: 'governance',
+                name: 'domain-governance',
+                benchmarks: [
+                    { id: 'governance-1', name: 'Leadership commitment to TB control' },
+                    { id: 'governance-2', name: 'TB committee functionality' },
+                    { id: 'governance-3', name: 'Integration with health system' }
+                ]
+            },
+            {
+                id: 'finance',
+                name: 'domain-finance',
+                benchmarks: [
+                    { id: 'finance-1', name: 'Budget allocation for TB activities' },
+                    { id: 'finance-2', name: 'Financial tracking mechanisms' },
+                    { id: 'finance-3', name: 'Sustainability of funding' }
+                ]
+            },
+            {
+                id: 'supply',
+                name: 'domain-supply',
+                benchmarks: [
+                    { id: 'supply-1', name: 'Medicine availability' },
+                    { id: 'supply-2', name: 'Supply chain management' },
+                    { id: 'supply-3', name: 'Inventory management system' }
+                ]
+            },
+            {
+                id: 'hr',
+                name: 'domain-hr',
+                benchmarks: [
+                    { id: 'hr-1', name: 'Staffing levels' },
+                    { id: 'hr-2', name: 'Training and capacity building' },
+                    { id: 'hr-3', name: 'Staff retention strategies' }
+                ]
+            },
+            {
+                id: 'lab',
+                name: 'domain-lab',
+                benchmarks: [
+                    { id: 'lab-1', name: 'Diagnostic equipment availability' },
+                    { id: 'lab-2', name: 'Laboratory quality assurance' },
+                    { id: 'lab-3', name: 'Turnaround time for tests' }
+                ]
+            },
+            {
+                id: 'clinical',
+                name: 'domain-clinical',
+                benchmarks: [
+                    { id: 'clinical-1', name: 'Clinical guidelines availability' },
+                    { id: 'clinical-2', name: 'Patient management protocols' },
+                    { id: 'clinical-3', name: 'Infection control measures' }
+                ]
+            },
+            {
+                id: 'pharmacy',
+                name: 'domain-pharmacy',
+                benchmarks: [
+                    { id: 'pharmacy-1', name: 'Pharmacy services availability' },
+                    { id: 'pharmacy-2', name: 'Medicine dispensing practices' },
+                    { id: 'pharmacy-3', name: 'Patient counseling services' }
+                ]
+            },
+            {
+                id: 'm-e',
+                name: 'domain-m-e',
+                benchmarks: [
+                    { id: 'm-e-1', name: 'Monitoring system functionality' },
+                    { id: 'm-e-2', name: 'Data collection tools' },
+                    { id: 'm-e-3', name: 'Data analysis capacity' }
+                ]
+            },
+            {
+                id: 'community',
+                name: 'domain-community',
+                benchmarks: [
+                    { id: 'community-1', name: 'Community engagement strategies' },
+                    { id: 'community-2', name: 'Community health worker involvement' },
+                    { id: 'community-3', name: 'Patient support groups' }
+                ]
+            },
+            {
+                id: 'infection',
+                name: 'domain-infection',
+                benchmarks: [
+                    { id: 'infection-1', name: 'Infection control committee' },
+                    { id: 'infection-2', name: 'IPC protocols implementation' },
+                    { id: 'infection-3', name: 'Waste management practices' }
+                ]
+            },
+            {
+                id: 'data',
+                name: 'domain-data',
+                benchmarks: [
+                    { id: 'data-1', name: 'Data management system' },
+                    { id: 'data-2', name: 'Data quality assurance' },
+                    { id: 'data-3', name: 'Data utilization for decision making' }
+                ]
+            },
+            {
+                id: 'research',
+                name: 'domain-research',
+                benchmarks: [
+                    { id: 'research-1', name: 'Operational research capacity' },
+                    { id: 'research-2', name: 'Research dissemination' },
+                    { id: 'research-3', name: 'Evidence-based practice' }
+                ]
+            }
+        ];
+
+        // National dimensions (11 dimensions)
+        const nationalDimensions = [
+            {
+                id: 'policy',
+                name: 'dimension-policy',
+                benchmarks: [
+                    { id: 'policy-1', name: 'National TB policy alignment with WHO guidelines' },
+                    { id: 'policy-2', name: 'Regulatory framework for new treatments' },
+                    { id: 'policy-3', name: 'Policy dissemination and implementation' }
+                ]
+            },
+            {
+                id: 'coordination',
+                name: 'dimension-coordination',
+                benchmarks: [
+                    { id: 'coordination-1', name: 'Multi-sectoral coordination mechanism' },
+                    { id: 'coordination-2', name: 'Public-private partnership' },
+                    { id: 'coordination-3', name: 'Community involvement in coordination' }
+                ]
+            },
+            {
+                id: 'capacity',
+                name: 'dimension-capacity',
+                benchmarks: [
+                    { id: 'capacity-1', name: 'Healthcare workforce capacity' },
+                    { id: 'capacity-2', name: 'Training programs for healthcare workers' },
+                    { id: 'capacity-3', name: 'Continuous professional development' }
+                ]
+            },
+            {
+                id: 'diagnostic',
+                name: 'dimension-diagnostic',
+                benchmarks: [
+                    { id: 'diagnostic-1', name: 'Access to quality-assured diagnostics' },
+                    { id: 'diagnostic-2', name: 'Diagnostic network coverage' },
+                    { id: 'diagnostic-3', name: 'Innovative diagnostic technologies' }
+                ]
+            },
+            {
+                id: 'treatment',
+                name: 'dimension-treatment',
+                benchmarks: [
+                    { id: 'treatment-1', name: 'Access to new treatment regimens' },
+                    { id: 'treatment-2', name: 'Treatment adherence support' },
+                    { id: 'treatment-3', name: 'Patient-centered care models' }
+                ]
+            },
+            {
+                id: 'monitoring',
+                name: 'dimension-monitoring',
+                benchmarks: [
+                    { id: 'monitoring-1', name: 'National monitoring system' },
+                    { id: 'monitoring-2', name: 'Program performance indicators' },
+                    { id: 'monitoring-3', name: 'Data quality and utilization' }
+                ]
+            },
+            {
+                id: 'supervision',
+                name: 'dimension-supervision',
+                benchmarks: [
+                    { id: 'supervision-1', name: 'Supervision system' },
+                    { id: 'supervision-2', name: 'Mentorship and coaching' },
+                    { id: 'supervision-3', name: 'Quality improvement cycles' }
+                ]
+            },
+            {
+                id: 'advocacy',
+                name: 'dimension-advocacy',
+                benchmarks: [
+                    { id: 'advocacy-1', name: 'Advocacy strategy' },
+                    { id: 'advocacy-2', name: 'Communication materials' },
+                    { id: 'advocacy-3', name: 'Media engagement' }
+                ]
+            },
+            {
+                id: 'research',
+                name: 'dimension-research',
+                benchmarks: [
+                    { id: 'research-1', name: 'National research agenda' },
+                    { id: 'research-2', name: 'Research capacity building' },
+                    { id: 'research-3', name: 'Knowledge translation' }
+                ]
+            },
+            {
+                id: 'partnership',
+                name: 'dimension-partnership',
+                benchmarks: [
+                    { id: 'partnership-1', name: 'Partnership framework' },
+                    { id: 'partnership-2', name: 'Resource mobilization strategy' },
+                    { id: 'partnership-3', name: 'Donor coordination' }
+                ]
+            },
+            {
+                id: 'sustainability',
+                name: 'dimension-sustainability',
+                benchmarks: [
+                    { id: 'sustainability-1', name: 'Sustainability plan' },
+                    { id: 'sustainability-2', name: 'Domestic resource mobilization' },
+                    { id: 'sustainability-3', name: 'Long-term strategic planning' }
+                ]
+            }
+        ];
+
+        // Global variables to store assessment data
+        let assessmentData = {
+            id: '',
+            participants: [],
+            country: {},
+            facilities: [],
+            dimensions: [],
+            overallScore: 0,
+            metCount: 0,
+            partialCount: 0,
+            notMetCount: 0,
+            language: 'en'
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up form event listeners
+            document.getElementById('participants-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveParticipantsData();
+                showSection('country');
+                updateStepIndicator('country');
+            });
+            
+            document.getElementById('country-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCountryData();
+                showSection('facility');
+                updateStepIndicator('facility');
+                initializeFacilityAssessment();
+            });
+            
+            document.getElementById('assessment-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveNationalAssessmentData();
+                calculateAssessment();
+                showSection('dashboard');
+                updateStepIndicator('dashboard');
+                generateDashboard();
+            });
+            
+            // Load saved assessments if any
+            loadSavedAssessments();
+        });
+
+        // Function to toggle language
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'fr' : 'en';
+            assessmentData.language = currentLanguage;
+            updateLanguage();
+        }
+
+        // Function to update language
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+            
+            // Update form placeholders
+            const placeholders = document.querySelectorAll('input[placeholder], select option');
+            placeholders.forEach(element => {
+                if (element.hasAttribute('data-placeholder-key')) {
+                    const key = element.getAttribute('data-placeholder-key');
+                    if (translations[currentLanguage][key]) {
+                        element.placeholder = translations[currentLanguage][key];
+                    }
+                }
+            });
+            
+            // Update select options
+            const selectOptions = document.querySelectorAll('select option');
+            selectOptions.forEach(option => {
+                if (option.hasAttribute('data-option-key')) {
+                    const key = option.getAttribute('data-option-key');
+                    if (translations[currentLanguage][key]) {
+                        option.textContent = translations[currentLanguage][key];
+                    }
+                }
+            });
+        }
+
+        // Function to show a specific section
+        function showSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show the selected section
+            document.getElementById(`${sectionName}-section`).style.display = 'block';
+            
+            // Update active nav link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('onclick').includes(sectionName)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Function to update step indicator
+        function updateStepIndicator(activeStep) {
+            const steps = ['participants', 'country', 'facility', 'assessment', 'dashboard', 'report'];
+            const activeIndex = steps.indexOf(activeStep);
+            
+            steps.forEach((step, index) => {
+                const stepElement = document.getElementById(`step-${step}`);
+                stepElement.classList.remove('active', 'completed');
+                
+                if (index < activeIndex) {
+                    stepElement.classList.add('completed');
+                } else if (index === activeIndex) {
+                    stepElement.classList.add('active');
+                }
+            });
+        }
+
+        // Function to add a participant row
+        function addParticipant() {
+            const participantsList = document.getElementById('participants-list');
+            const participantDiv = document.createElement('div');
+            participantDiv.className = 'participant-item row mb-3';
+            participantDiv.innerHTML = `
+                <div class="col-md-3">
+                    <input type="text" class="form-control participant-name" placeholder="Name" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control participant-org" placeholder="Organization" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="email" class="form-control participant-email" placeholder="Email">
+                </div>
+                <div class="col-md-2">
+                    <input type="tel" class="form-control participant-phone" placeholder="Phone">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeParticipant(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            participantsList.appendChild(participantDiv);
+        }
+
+        // Function to remove a participant row
+        function removeParticipant(button) {
+            const participantItem = button.closest('.participant-item');
+            participantItem.remove();
+        }
+
+        // Function to save participants data
+        function saveParticipantsData() {
+            assessmentData.id = document.getElementById('assessment-id').value || `ASSESSMENT-${Date.now()}`;
+            assessmentData.country = document.getElementById('country').value;
+            assessmentData.location = document.getElementById('location').value;
+            assessmentData.workshopDate = document.getElementById('workshop-date').value;
+            assessmentData.chair = document.getElementById('chair').value;
+            assessmentData.moderator = document.getElementById('moderator').value;
+            assessmentData.reporter = document.getElementById('reporter').value;
+            
+            assessmentData.participants = [];
+            const participantItems = document.querySelectorAll('.participant-item');
+            participantItems.forEach(item => {
+                const name = item.querySelector('.participant-name').value;
+                const org = item.querySelector('.participant-org').value;
+                const email = item.querySelector('.participant-email').value;
+                const phone = item.querySelector('.participant-phone').value;
+                
+                if (name && org) {
+                    assessmentData.participants.push({ name, org, email, phone });
+                }
+            });
+        }
+
+        // Function to save country data
+        function saveCountryData() {
+            assessmentData.countryData = {
+                tbIncidence: document.getElementById('tb-incidence').value,
+                drTbPrevalence: document.getElementById('dr-tb-prevalence').value,
+                treatmentSuccess: document.getElementById('treatment-success').value,
+                drTbPatients: document.getElementById('dr-tb-patients').value,
+                healthFacilities: document.getElementById('health-facilities').value,
+                balmExperience: document.getElementById('balm-experience').value
+            };
+        }
+
+        // Function to initialize facility assessment
+        function initializeFacilityAssessment() {
+            const facilitiesContainer = document.getElementById('facilities-container');
+            facilitiesContainer.innerHTML = '';
+            
+            // Add first facility
+            addFacility();
+        }
+
+        // Function to add a facility
+        function addFacility() {
+            const facilitiesContainer = document.getElementById('facilities-container');
+            const facilityId = `facility-${Date.now()}`;
+            
+            const facilityDiv = document.createElement('div');
+            facilityDiv.className = 'facility-card';
+            facilityDiv.id = facilityId;
+            
+            facilityDiv.innerHTML = `
+                <div class="facility-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><span data-translate="facility-title">Facility Assessment</span> #${assessmentData.facilities.length + 1}</h5>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFacility('${facilityId}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="facility-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label"><span data-translate="facility-name-label">Facility Name</span></label>
+                            <input type="text" class="form-control facility-name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><span data-translate="facility-type-label">Facility Type</span></label>
+                            <select class="form-control facility-type" required>
+                                <option value=""><span data-translate="select-option">Select...</span></option>
+                                <option value="hospital" data-option-key="facility-type-hospital"><span data-translate="facility-type-hospital">Hospital</span></option>
+                                <option value="clinic" data-option-key="facility-type-clinic"><span data-translate="facility-type-clinic">Clinic</span></option>
+                                <option value="health-center" data-option-key="facility-type-health-center"><span data-translate="facility-type-health-center">Health Center</span></option>
+                                <option value="lab" data-option-key="facility-type-lab"><span data-translate="facility-type-lab">Laboratory</span></option>
+                                <option value="other" data-option-key="facility-type-other"><span data-translate="facility-type-other">Other</span></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label"><span data-translate="facility-location-label">Facility Location</span></label>
+                            <input type="text" class="form-control facility-location" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><span data-translate="facility-district-label">District</span></label>
+                            <input type="text" class="form-control facility-district" required>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label"><span data-translate="facility-responsible-label">Responsible Person</span></label>
+                            <input type="text" class="form-control facility-responsible" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><span data-translate="facility-contact-label">Contact Information</span></label>
+                            <input type="text" class="form-control facility-contact">
+                        </div>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3"><span data-translate="domain-evaluation">Domain Evaluation</span></h5>
+                    <div class="domains-container">
+                        <!-- Domains will be dynamically added here -->
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-primary" onclick="addFacility()">
+                            <i class="bi bi-plus-circle me-1"></i><span data-translate="add-another-facility">Add Another Facility</span>
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveFacilityData('${facilityId}')">
+                            <i class="bi bi-check-circle me-1"></i><span data-translate="finish-facility">Finish Facility Assessment</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            facilitiesContainer.appendChild(facilityDiv);
+            
+            // Add domains to the facility
+            const domainsContainer = facilityDiv.querySelector('.domains-container');
+            facilityDomains.forEach(domain => {
+                addDomainToFacility(domainsContainer, domain);
+            });
+            
+            // Update language if needed
+            updateLanguage();
+        }
+
+        // Function to add a domain to a facility
+        function addDomainToFacility(container, domain) {
+            const domainDiv = document.createElement('div');
+            domainDiv.className = 'domain-card';
+            domainDiv.id = `${domain.id}-domain`;
+            
+            domainDiv.innerHTML = `
+                <div class="domain-header">
+                    <h6 class="mb-0"><span data-translate="${domain.name}">${translations[currentLanguage][domain.name]}</span></h6>
+                </div>
+                <div class="domain-body">
+                    ${domain.benchmarks.map(benchmark => `
+                        <div class="mb-3">
+                            <label class="form-label">${benchmark.name}</label>
+                            <div class="mb-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-yes" value="yes">
+                                    <label class="form-check-label" for="${benchmark.id}-yes">
+                                        <span data-translate="status-met">${translations[currentLanguage]['status-met']}</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-partial" value="partial">
+                                    <label class="form-check-label" for="${benchmark.id}-partial">
+                                        <span data-translate="status-partial">${translations[currentLanguage]['status-partial']}</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-no" value="no">
+                                    <label class="form-check-label" for="${benchmark.id}-no">
+                                        <span data-translate="status-not-met">${translations[currentLanguage]['status-not-met']}</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-na" value="na">
+                                    <label class="form-check-label" for="${benchmark.id}-na">
+                                        <span data-translate="status-na">${translations[currentLanguage]['status-na']}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <textarea class="form-control" placeholder="${translations[currentLanguage]['describe-situation']}" rows="2"></textarea>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.appendChild(domainDiv);
+        }
+
+        // Function to remove a facility
+        function removeFacility(facilityId) {
+            const facilityDiv = document.getElementById(facilityId);
+            facilityDiv.remove();
+            
+            // Update facility numbers
+            const facilityCards = document.querySelectorAll('.facility-card');
+            facilityCards.forEach((card, index) => {
+                const header = card.querySelector('.facility-header h5');
+                header.textContent = `${translations[currentLanguage]['facility-title']} #${index + 1}`;
+            });
+        }
+
+        // Function to save facility data
+        function saveFacilityData(facilityId) {
+            const facilityDiv = document.getElementById(facilityId);
+            const facilityData = {
+                id: facilityId,
+                name: facilityDiv.querySelector('.facility-name').value,
+                type: facilityDiv.querySelector('.facility-type').value,
+                location: facilityDiv.querySelector('.facility-location').value,
+                district: facilityDiv.querySelector('.facility-district').value,
+                responsible: facilityDiv.querySelector('.facility-responsible').value,
+                contact: facilityDiv.querySelector('.facility-contact').value,
+                domains: []
+            };
+            
+            // Save domain data
+            facilityDomains.forEach(domain => {
+                const domainData = {
+                    id: domain.id,
+                    name: domain.name,
+                    benchmarks: []
+                };
+                
+                domain.benchmarks.forEach(benchmark => {
+                    const status = getRadioValue(benchmark.id);
+                    const description = facilityDiv.querySelector(`input[name="${benchmark.id}"]`).closest('.mb-3').querySelector('textarea').value;
+                    
+                    domainData.benchmarks.push({
+                        id: benchmark.id,
+                        name: benchmark.name,
+                        status: status,
+                        description: description
+                    });
+                });
+                
+                facilityData.domains.push(domainData);
+            });
+            
+            assessmentData.facilities.push(facilityData);
+            
+            // Hide the facility card
+            facilityDiv.style.display = 'none';
+            
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <strong><span data-translate="success">Success!</span></strong> <span data-translate="facility-saved">Facility data saved successfully.</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.step-indicator'));
+            
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // Function to initialize national assessment
+        function initializeNationalAssessment() {
+            const dimensionsContainer = document.getElementById('dimensions-container');
+            dimensionsContainer.innerHTML = '';
+            
+            nationalDimensions.forEach(dimension => {
+                addDimensionToAssessment(dimensionsContainer, dimension);
+            });
+        }
+
+        // Function to add a dimension to the national assessment
+        function addDimensionToAssessment(container, dimension) {
+            const dimensionDiv = document.createElement('div');
+            dimensionDiv.className = 'mb-5';
+            dimensionDiv.id = `${dimension.id}-dimension`;
+            
+            dimensionDiv.innerHTML = `
+                <h4><span data-translate="${dimension.name}">${translations[currentLanguage][dimension.name]}</span></h4>
+                ${dimension.benchmarks.map(benchmark => `
+                    <div class="benchmark-item mb-3">
+                        <h5>${benchmark.name}</h5>
+                        <div class="mb-3">
+                            <label class="form-label"><span data-translate="status">Status</span></label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-yes" value="yes">
+                                    <label class="form-check-label" for="${benchmark.id}-yes">
+                                        <span data-translate="status-met">${translations[currentLanguage]['status-met']}</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-partial" value="partial">
+                                    <label class="form-check-label" for="${benchmark.id}-partial">
+                                        <span data-translate="status-partial">${translations[currentLanguage]['status-partial']}</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="${benchmark.id}" id="${benchmark.id}-no" value="no">
+                                    <label class="form-check-label" for="${benchmark.id}-no">
+                                        <span data-translate="status-not-met">${translations[currentLanguage]['status-not-met']}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="${benchmark.id}-desc" class="form-label"><span data-translate="describe-situation">Describe the current situation</span></label>
+                            <textarea class="form-control" id="${benchmark.id}-desc" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="${benchmark.id}-action" class="form-label"><span data-translate="action-plan">Action Plan</span></label>
+                            <textarea class="form-control" id="${benchmark.id}-action" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="${benchmark.id}-responsible" class="form-label"><span data-translate="responsible">Responsible</span></label>
+                                <input type="text" class="form-control" id="${benchmark.id}-responsible">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="${benchmark.id}-timeline" class="form-label"><span data-translate="timeline">Timeline</span></label>
+                                <input type="text" class="form-control" id="${benchmark.id}-timeline" placeholder="e.g., Q3 2023">
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+            
+            container.appendChild(dimensionDiv);
+        }
+
+        // Function to save national assessment data
+        function saveNationalAssessmentData() {
+            assessmentData.dimensions = [];
+            
+            nationalDimensions.forEach(dimension => {
+                const dimensionData = {
+                    id: dimension.id,
+                    name: dimension.name,
+                    benchmarks: []
+                };
+                
+                dimension.benchmarks.forEach(benchmark => {
+                    const status = getRadioValue(benchmark.id);
+                    const description = document.getElementById(`${benchmark.id}-desc`).value;
+                    const action = document.getElementById(`${benchmark.id}-action`).value;
+                    const responsible = document.getElementById(`${benchmark.id}-responsible`).value;
+                    const timeline = document.getElementById(`${benchmark.id}-timeline`).value;
+                    
+                    dimensionData.benchmarks.push({
+                        id: benchmark.id,
+                        name: benchmark.name,
+                        status: status,
+                        description: description,
+                        action: action,
+                        responsible: responsible,
+                        timeline: timeline
+                    });
+                });
+                
+                assessmentData.dimensions.push(dimensionData);
+            });
+        }
+
+        // Helper function to get radio button value
+        function getRadioValue(name) {
+            const radioButtons = document.querySelectorAll(`input[name="${name}"]`);
+            for (const radio of radioButtons) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return '';
+        }
+
+        // Function to calculate assessment scores
+        function calculateAssessment() {
+            let totalStandards = 0;
+            let metStandards = 0;
+            let partialStandards = 0;
+            let notMetStandards = 0;
+            
+            // Calculate scores for national dimensions
+            assessmentData.dimensions.forEach(dimension => {
+                dimension.benchmarks.forEach(benchmark => {
+                    if (benchmark.status !== 'na') {
+                        totalStandards++;
+                        if (benchmark.status === 'yes') {
+                            metStandards++;
+                        } else if (benchmark.status === 'partial') {
+                            partialStandards++;
+                        } else if (benchmark.status === 'no') {
+                            notMetStandards++;
+                        }
+                    }
+                });
+            });
+            
+            // Calculate scores for facilities
+            assessmentData.facilities.forEach(facility => {
+                facility.domains.forEach(domain => {
+                    domain.benchmarks.forEach(benchmark => {
+                        if (benchmark.status !== 'na') {
+                            totalStandards++;
+                            if (benchmark.status === 'yes') {
+                                metStandards++;
+                            } else if (benchmark.status === 'partial') {
+                                partialStandards++;
+                            } else if (benchmark.status === 'no') {
+                                notMetStandards++;
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Calculate overall score
+            if (totalStandards > 0) {
+                assessmentData.overallScore = Math.round(((metStandards * 100) + (partialStandards * 50)) / totalStandards);
+            } else {
+                assessmentData.overallScore = 0;
+            }
+            
+            assessmentData.metCount = metStandards;
+            assessmentData.partialCount = partialStandards;
+            assessmentData.notMetCount = notMetStandards;
+            
+            // Determine preparedness level
+            if (assessmentData.overallScore >= 80) {
+                assessmentData.preparednessLevel = 'High';
+            } else if (assessmentData.overallScore >= 50) {
+                assessmentData.preparednessLevel = 'Moderate';
+            } else {
+                assessmentData.preparednessLevel = 'Low';
+            }
+            
+            // Save assessment data
+            saveAssessmentToStorage();
+        }
+
+        // Function to generate dashboard
+        function generateDashboard() {
+            // Update metric cards
+            document.getElementById('overall-score').textContent = assessmentData.overallScore + '%';
+            document.getElementById('met-count').textContent = assessmentData.metCount;
+            document.getElementById('partial-count').textContent = assessmentData.partialCount;
+            document.getElementById('not-met-count').textContent = assessmentData.notMetCount;
+            
+            // Update overall score color
+            const overallScoreElement = document.getElementById('overall-score');
+            overallScoreElement.classList.remove('status-met', 'status-partial', 'status-not-met');
+            if (assessmentData.overallScore >= 80) {
+                overallScoreElement.classList.add('status-met');
+            } else if (assessmentData.overallScore >= 50) {
+                overallScoreElement.classList.add('status-partial');
+            } else {
+                overallScoreElement.classList.add('status-not-met');
+            }
+            
+            // Generate category chart
+            generateCategoryChart();
+            
+            // Generate benchmark status chart
+            generateBenchmarkChart();
+            
+            // Generate facility performance chart
+            generateFacilityChart();
+            
+            // Generate critical gaps list
+            generateCriticalGapsList();
+        }
+
+        // Function to generate category chart
+        function generateCategoryChart() {
+            const ctx = document.getElementById('category-chart').getContext('2d');
+            
+            // Calculate scores for each dimension
+            const dimensionScores = {};
+            assessmentData.dimensions.forEach(dimension => {
+                let total = 0;
+                let score = 0;
+                dimension.benchmarks.forEach(benchmark => {
+                    if (benchmark.status !== 'na') {
+                        total++;
+                        if (benchmark.status === 'yes') {
+                            score += 100;
+                        } else if (benchmark.status === 'partial') {
+                            score += 50;
+                        }
+                    }
+                });
+                dimensionScores[dimension.name] = total > 0 ? Math.round(score / total) : 0;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: assessmentData.dimensions.map(d => translations[currentLanguage][d.name]),
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: assessmentData.dimensions.map(d => dimensionScores[d.name]),
+                        backgroundColor: 'rgba(102, 16, 242, 0.7)',
+                        borderColor: 'rgba(102, 16, 242, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Score (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to generate benchmark chart
+        function generateBenchmarkChart() {
+            const ctx = document.getElementById('benchmark-chart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        translations[currentLanguage]['status-met'],
+                        translations[currentLanguage]['status-partial'],
+                        translations[currentLanguage]['status-not-met']
+                    ],
+                    datasets: [{
+                        data: [assessmentData.metCount, assessmentData.partialCount, assessmentData.notMetCount],
+                        backgroundColor: [
+                            'rgba(25, 135, 84, 0.7)',
+                            'rgba(255, 193, 7, 0.7)',
+                            'rgba(220, 53, 69, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(25, 135, 84, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to generate facility performance chart
+        function generateFacilityChart() {
+            const ctx = document.getElementById('facility-chart').getContext('2d');
+            
+            // Calculate scores for each facility
+            const facilityScores = assessmentData.facilities.map(facility => {
+                let total = 0;
+                let score = 0;
+                facility.domains.forEach(domain => {
+                    domain.benchmarks.forEach(benchmark => {
+                        if (benchmark.status !== 'na') {
+                            total++;
+                            if (benchmark.status === 'yes') {
+                                score += 100;
+                            } else if (benchmark.status === 'partial') {
+                                score += 50;
+                            }
+                        }
+                    });
+                });
+                return total > 0 ? Math.round(score / total) : 0;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: assessmentData.facilities.map(f => f.name),
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: facilityScores,
+                        backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Score (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to generate critical gaps list
+        function generateCriticalGapsList() {
+            const criticalGapsList = document.getElementById('critical-gaps-list');
+            criticalGapsList.innerHTML = '';
+            
+            let hasCriticalGaps = false;
+            
+            // Check national dimensions for "Not Met" status
+            assessmentData.dimensions.forEach(dimension => {
+                dimension.benchmarks.forEach(benchmark => {
+                    if (benchmark.status === 'no') {
+                        hasCriticalGaps = true;
+                        const gapItem = document.createElement('div');
+                        gapItem.className = 'alert alert-danger d-flex justify-content-between align-items-center';
+                        gapItem.innerHTML = `
+                            <div>
+                                <strong>${translations[currentLanguage][dimension.name]} - ${benchmark.name}</strong>
+                                <div class="small">${benchmark.description || 'No description provided'}</div>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger">${translations[currentLanguage]['status-not-met']}</span>
+                            </div>
+                        `;
+                        criticalGapsList.appendChild(gapItem);
+                    }
+                });
+            });
+            
+            // Check facilities for "Not Met" status
+            assessmentData.facilities.forEach(facility => {
+                facility.domains.forEach(domain => {
+                    domain.benchmarks.forEach(benchmark => {
+                        if (benchmark.status === 'no') {
+                            hasCriticalGaps = true;
+                            const gapItem = document.createElement('div');
+                            gapItem.className = 'alert alert-warning d-flex justify-content-between align-items-center';
+                            gapItem.innerHTML = `
+                                <div>
+                                    <strong>${facility.name} - ${translations[currentLanguage][domain.name]} - ${benchmark.name}</strong>
+                                    <div class="small">${benchmark.description || 'No description provided'}</div>
+                                </div>
+                                <div>
+                                    <span class="badge bg-warning">${translations[currentLanguage]['status-not-met']}</span>
+                                </div>
+                            `;
+                            criticalGapsList.appendChild(gapItem);
+                        }
+                    });
+                });
+            });
+            
+            if (!hasCriticalGaps) {
+                criticalGapsList.innerHTML = `<p class="text-muted">${translations[currentLanguage]['no-critical-gaps']}</p>`;
+            }
+        }
+
+        // Function to show the report section
+        document.querySelector('button[onclick="showSection(\'report\')"]').addEventListener('click', function() {
+            generateReport();
+            updateStepIndicator('report');
+        });
+
+        // Function to generate report
+        function generateReport() {
+            const reportContent = document.getElementById('report-content');
+            reportContent.innerHTML = '';
+            
+            // Executive Summary
+            const executiveSummary = document.createElement('div');
+            executiveSummary.className = 'report-section';
+            executiveSummary.innerHTML = `
+                <h2 class="report-title">${translations[currentLanguage]['report-title']}</h2>
+                <div class="row">
+                    <div class="col-md-8">
+                        <p><strong>${translations[currentLanguage]['country-label']}:</strong> ${assessmentData.country}</p>
+                        <p><strong>${translations[currentLanguage]['workshop-date-label']}:</strong> ${new Date(assessmentData.workshopDate).toLocaleDateString()}</p>
+                        <p><strong>${translations[currentLanguage]['overall-score-label']}:</strong> ${assessmentData.overallScore}% (${assessmentData.preparednessLevel})</p>
+                        <p><strong>${translations[currentLanguage]['met-count-label']}:</strong> ${assessmentData.metCount} out of ${assessmentData.metCount + assessmentData.partialCount + assessmentData.notMetCount}</p>
+                        <h4 class="mt-3">${translations[currentLanguage]['key-findings']}Key Findings</h4>
+                        <ul>
+                            <li>${assessmentData.metCount} ${translations[currentLanguage]['standards-met-text']}standards are fully met, indicating strong foundational elements for BPALM implementation.</li>
+                            <li>${assessmentData.partialCount} ${translations[currentLanguage]['standards-partial-text']}standards are partially met, requiring targeted improvements.</li>
+                            <li>${assessmentData.notMetCount} ${translations[currentLanguage]['standards-not-met-text']}standards are not met, representing critical gaps that need immediate attention.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <div class="metric-value ${assessmentData.overallScore >= 80 ? 'status-met' : assessmentData.overallScore >= 50 ? 'status-partial' : 'status-not-met'}">${assessmentData.overallScore}%</div>
+                                <div class="metric-label">${translations[currentLanguage]['overall-score-label']}</div>
+                                <div class="mt-2">
+                                    <div class="progress">
+                                        <div class="progress-bar ${assessmentData.overallScore >= 80 ? 'bg-success' : assessmentData.overallScore >= 50 ? 'bg-warning' : 'bg-danger'}" 
+                                            role="progressbar" style="width: ${assessmentData.overallScore}%" 
+                                            aria-valuenow="${assessmentData.overallScore}" aria-valuemin="0" aria-valuemax="100">
+                                            ${assessmentData.overallScore}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            reportContent.appendChild(executiveSummary);
+            
+            // Add more report sections as needed...
+            
+            // For brevity, I'll add a simplified version of the remaining sections
+            const methodology = document.createElement('div');
+            methodology.className = 'report-section';
+            methodology.innerHTML = `
+                <h2 class="report-title">${translations[currentLanguage]['methodology-title']}</h2>
+                <p>${translations[currentLanguage]['methodology-description']}</p>
+                <h4 class="mt-3">${translations[currentLanguage]['participants-title']}</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>${translations[currentLanguage]['name-label']}</th>
+                                <th>${translations[currentLanguage]['organization-label']}</th>
+                                <th>${translations[currentLanguage]['email-label']}</th>
+                                <th>${translations[currentLanguage]['phone-label']}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${assessmentData.participants.map(p => `
+                                <tr>
+                                    <td>${p.name}</td>
+                                    <td>${p.org}</td>
+                                    <td>${p.email}</td>
+                                    <td>${p.phone}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            reportContent.appendChild(methodology);
+            
+            // Add facility assessment results
+            const facilityResults = document.createElement('div');
+            facilityResults.className = 'report-section';
+            facilityResults.innerHTML = `
+                <h2 class="report-title">${translations[currentLanguage]['facility-results-title']}</h2>
+                ${assessmentData.facilities.map(facility => `
+                    <div class="mb-4">
+                        <h3>${facility.name} (${facility.type})</h3>
+                        <p><strong>${translations[currentLanguage]['facility-location-label']}:</strong> ${facility.location}</p>
+                        <p><strong>${translations[currentLanguage]['facility-district-label']}:</strong> ${facility.district}</p>
+                        <h4>${translations[currentLanguage]['domain-scores']}</h4>
+                        <div class="row">
+                            ${facility.domains.map(domain => {
+                                const score = calculateDomainScore(domain);
+                                return `
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <h6>${translations[currentLanguage][domain.name]}</h6>
+                                                <div class="metric-value ${score >= 80 ? 'status-met' : score >= 50 ? 'status-partial' : 'status-not-met'}">${score}%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+            reportContent.appendChild(facilityResults);
+            
+            // Add national assessment results
+            const nationalResults = document.createElement('div');
+            nationalResults.className = 'report-section';
+            nationalResults.innerHTML = `
+                <h2 class="report-title">${translations[currentLanguage]['national-results-title']}</h2>
+                ${assessmentData.dimensions.map(dimension => `
+                    <div class="mb-4">
+                        <h3>${translations[currentLanguage][dimension.name]}</h3>
+                        <div class="progress mb-3">
+                            <div class="progress-bar ${calculateDimensionScore(dimension) >= 80 ? 'bg-success' : calculateDimensionScore(dimension) >= 50 ? 'bg-warning' : 'bg-danger'}" 
+                                role="progressbar" style="width: ${calculateDimensionScore(dimension)}%" 
+                                aria-valuenow="${calculateDimensionScore(dimension)}" aria-valuemin="0" aria-valuemax="100">
+                                ${calculateDimensionScore(dimension)}%
+                            </div>
+                        </div>
+                        ${dimension.benchmarks.map(benchmark => `
+                            <div class="benchmark-item ${benchmark.status === 'yes' ? 'met' : benchmark.status === 'partial' ? 'partial' : 'not-met'} mb-3">
+                                <h5>${benchmark.name}</h5>
+                                <p><strong>${translations[currentLanguage]['status-label']}:</strong> 
+                                    <span class="${benchmark.status === 'yes' ? 'status-met' : benchmark.status === 'partial' ? 'status-partial' : 'status-not-met'}">
+                                        ${translations[currentLanguage][`status-${benchmark.status}`]}
+                                    </span>
+                                </p>
+                                <p><strong>${translations[currentLanguage]['description-label']}:</strong> ${benchmark.description || 'No description provided'}</p>
+                                ${benchmark.action ? `<p><strong>${translations[currentLanguage]['action-plan']}:</strong> ${benchmark.action}</p>` : ''}
+                                ${benchmark.responsible ? `<p><strong>${translations[currentLanguage]['responsible']}:</strong> ${benchmark.responsible}</p>` : ''}
+                                ${benchmark.timeline ? `<p><strong>${translations[currentLanguage]['timeline']}:</strong> ${benchmark.timeline}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            `;
+            reportContent.appendChild(nationalResults);
+        }
+
+        // Helper function to calculate domain score
+        function calculateDomainScore(domain) {
+            let total = 0;
+            let score = 0;
+            domain.benchmarks.forEach(benchmark => {
+                if (benchmark.status !== 'na') {
+                    total++;
+                    if (benchmark.status === 'yes') {
+                        score += 100;
+                    } else if (benchmark.status === 'partial') {
+                        score += 50;
+                    }
+                }
+            });
+            return total > 0 ? Math.round(score / total) : 0;
+        }
+
+        // Helper function to calculate dimension score
+        function calculateDimensionScore(dimension) {
+            let total = 0;
+            let score = 0;
+            dimension.benchmarks.forEach(benchmark => {
+                if (benchmark.status !== 'na') {
+                    total++;
+                    if (benchmark.status === 'yes') {
+                        score += 100;
+                    } else if (benchmark.status === 'partial') {
+                        score += 50;
+                    }
+                }
+            });
+            return total > 0 ? Math.round(score / total) : 0;
+        }
+
+        // Function to save assessment to localStorage
+        function saveAssessmentToStorage() {
+            const savedAssessments = JSON.parse(localStorage.getItem('balmAssessments') || '[]');
+            
+            // Check if assessment already exists
+            const existingIndex = savedAssessments.findIndex(a => a.id === assessmentData.id);
+            if (existingIndex !== -1) {
+                savedAssessments[existingIndex] = assessmentData;
+            } else {
+                savedAssessments.push(assessmentData);
+            }
+            
+            localStorage.setItem('balmAssessments', JSON.stringify(savedAssessments));
+        }
+
+        // Function to save progress
+        function saveProgress() {
+            saveAssessmentToStorage();
+            
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <strong>${translations[currentLanguage]['success']}!</strong> ${translations[currentLanguage]['progress-saved']}.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.step-indicator'));
+            
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // Function to load saved assessments
+        function loadSavedAssessments() {
+            const savedAssessments = JSON.parse(localStorage.getItem('balmAssessments') || '[]');
+            return savedAssessments;
+        }
+
+        // Function to show saved assessments
+        function showSavedAssessments() {
+            const savedAssessments = loadSavedAssessments();
+            const savedAssessmentsList = document.getElementById('saved-assessments-list');
+            
+            savedAssessmentsList.innerHTML = '';
+            
+            if (savedAssessments.length === 0) {
+                savedAssessmentsList.innerHTML = `<p class="text-muted">${translations[currentLanguage]['no-saved-assessments']}</p>`;
+            } else {
+                const table = document.createElement('table');
+                table.className = 'table table-striped';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>${translations[currentLanguage]['id-label']}</th>
+                            <th>${translations[currentLanguage]['country-label']}</th>
+                            <th>${translations[currentLanguage]['date-label']}</th>
+                            <th>${translations[currentLanguage]['score-label']}</th>
+                            <th>${translations[currentLanguage]['actions-label']}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${savedAssessments.map(assessment => `
+                            <tr class="saved-assessment" onclick="loadAssessment('${assessment.id}')">
+                                <td>${assessment.id}</td>
+                                <td>${assessment.country}</td>
+                                <td>${new Date(assessment.workshopDate).toLocaleDateString()}</td>
+                                <td>${assessment.overallScore || 0}%</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); loadAssessment('${assessment.id}')">
+                                        ${translations[currentLanguage]['load']}
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteAssessment('${assessment.id}')">
+                                        ${translations[currentLanguage]['delete']}
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                savedAssessmentsList.appendChild(table);
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('savedAssessmentsModal'));
+            modal.show();
+        }
+
+        // Function to load assessment
+        function loadAssessment(assessmentId) {
+            const savedAssessments = loadSavedAssessments();
+            const assessment = savedAssessments.find(a => a.id === assessmentId);
+            
+            if (assessment) {
+                assessmentData = assessment;
+                currentLanguage = assessment.language || 'en';
+                updateLanguage();
+                
+                // Populate forms with loaded data
+                populateForms();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('savedAssessmentsModal'));
+                modal.hide();
+                
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <strong>${translations[currentLanguage]['success']}!</strong> ${translations[currentLanguage]['assessment-loaded']}.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.step-indicator'));
+                
+                // Auto-dismiss after 3 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            }
+        }
+
+        // Function to delete assessment
+        function deleteAssessment(assessmentId) {
+            if (confirm(translations[currentLanguage]['confirm-delete'])) {
+                const savedAssessments = loadSavedAssessments();
+                const updatedAssessments = savedAssessments.filter(a => a.id !== assessmentId);
+                localStorage.setItem('balmAssessments', JSON.stringify(updatedAssessments));
+                showSavedAssessments();
+            }
+        }
+
+        // Function to populate forms with loaded data
+        function populateForms() {
+            // Populate participants form
+            if (assessmentData.participants) {
+                document.getElementById('country').value = assessmentData.country || '';
+                document.getElementById('location').value = assessmentData.location || '';
+                document.getElementById('workshop-date').value = assessmentData.workshopDate || '';
+                document.getElementById('chair').value = assessmentData.chair || '';
+                document.getElementById('moderator').value = assessmentData.moderator || '';
+                document.getElementById('reporter').value = assessmentData.reporter || '';
+                document.getElementById('assessment-id').value = assessmentData.id || '';
+                
+                // Populate participants list
+                const participantsList = document.getElementById('participants-list');
+                participantsList.innerHTML = '';
+                
+                assessmentData.participants.forEach(participant => {
+                    const participantDiv = document.createElement('div');
+                    participantDiv.className = 'participant-item row mb-3';
+                    participantDiv.innerHTML = `
+                        <div class="col-md-3">
+                            <input type="text" class="form-control participant-name" value="${participant.name}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control participant-org" value="${participant.org}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="email" class="form-control participant-email" value="${participant.email || ''}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="tel" class="form-control participant-phone" value="${participant.phone || ''}">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeParticipant(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    participantsList.appendChild(participantDiv);
+                });
+            }
+            
+            // Populate country form
+            if (assessmentData.countryData) {
+                document.getElementById('tb-incidence').value = assessmentData.countryData.tbIncidence || '';
+                document.getElementById('dr-tb-prevalence').value = assessmentData.countryData.drTbPrevalence || '';
+                document.getElementById('treatment-success').value = assessmentData.countryData.treatmentSuccess || '';
+                document.getElementById('dr-tb-patients').value = assessmentData.countryData.drTbPatients || '';
+                document.getElementById('health-facilities').value = assessmentData.countryData.healthFacilities || '';
+                document.getElementById('balm-experience').value = assessmentData.countryData.balmExperience || '';
+            }
+            
+            // Populate facility assessment
+            if (assessmentData.facilities) {
+                const facilitiesContainer = document.getElementById('facilities-container');
+                facilitiesContainer.innerHTML = '';
+                
+                assessmentData.facilities.forEach(facility => {
+                    addFacility();
+                    const facilityDiv = facilitiesContainer.lastElementChild;
+                    
+                    // Populate facility data
+                    facilityDiv.querySelector('.facility-name').value = facility.name || '';
+                    facilityDiv.querySelector('.facility-type').value = facility.type || '';
+                    facilityDiv.querySelector('.facility-location').value = facility.location || '';
+                    facilityDiv.querySelector('.facility-district').value = facility.district || '';
+                    facilityDiv.querySelector('.facility-responsible').value = facility.responsible || '';
+                    facilityDiv.querySelector('.facility-contact').value = facility.contact || '';
+                    
+                    // Populate domain data
+                    facility.domains.forEach(domain => {
+                        const domainDiv = facilityDiv.querySelector(`#${domain.id}-domain`);
+                        if (domainDiv) {
+                            domain.benchmarks.forEach(benchmark => {
+                                const benchmarkDiv = domainDiv.querySelector(`input[name="${benchmark.id}"]`).closest('.mb-3');
+                                if (benchmark.status) {
+                                    const radioInput = benchmarkDiv.querySelector(`input[value="${benchmark.status}"]`);
+                                    if (radioInput) radioInput.checked = true;
+                                }
+                                const textarea = benchmarkDiv.querySelector('textarea');
+                                if (textarea) textarea.value = benchmark.description || '';
+                            });
+                        }
+                    });
+                });
+            }
+            
+            // Populate national assessment
+            if (assessmentData.dimensions) {
+                initializeNationalAssessment();
+                
+                assessmentData.dimensions.forEach(dimension => {
+                    dimension.benchmarks.forEach(benchmark => {
+                        if (benchmark.status) {
+                            const radioInput = document.querySelector(`input[name="${benchmark.id}"][value="${benchmark.status}"]`);
+                            if (radioInput) radioInput.checked = true;
+                        }
+                        const descInput = document.getElementById(`${benchmark.id}-desc`);
+                        if (descInput) descInput.value = benchmark.description || '';
+                        const actionInput = document.getElementById(`${benchmark.id}-action`);
+                        if (actionInput) actionInput.value = benchmark.action || '';
+                        const responsibleInput = document.getElementById(`${benchmark.id}-responsible`);
+                        if (responsibleInput) responsibleInput.value = benchmark.responsible || '';
+                        const timelineInput = document.getElementById(`${benchmark.id}-timeline`);
+                        if (timelineInput) timelineInput.value = benchmark.timeline || '';
+                    });
+                });
+            }
+        }
+
+        // Function to export results
+        function exportResults() {
+            // This function would typically open a modal with export options
+            alert(translations[currentLanguage]['export-functionality']);
+        }
+
+        // Function to export to PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.text(translations[currentLanguage]['report-title'], 105, 20, { align: 'center' });
+            
+            // Add country and date
+            doc.setFontSize(12);
+            doc.text(`${translations[currentLanguage]['country-label']}: ${assessmentData.country}`, 20, 40);
+            doc.text(`${translations[currentLanguage]['date-label']}: ${new Date(assessmentData.workshopDate).toLocaleDateString()}`, 20, 50);
+            
+            // Add overall score
+            doc.setFontSize(16);
+            doc.text(`${translations[currentLanguage]['overall-score-label']}: ${assessmentData.overallScore}% (${assessmentData.preparednessLevel})`, 20, 70);
+            
+            // Add standards summary
+            doc.setFontSize(14);
+            doc.text(translations[currentLanguage]['standards-summary'], 20, 90);
+            doc.setFontSize(12);
+            doc.text(`${translations[currentLanguage]['met-count-label']}: ${assessmentData.metCount}`, 20, 100);
+            doc.text(`${translations[currentLanguage]['partial-count-label']}: ${assessmentData.partialCount}`, 20, 110);
+            doc.text(`${translations[currentLanguage]['not-met-count-label']}: ${assessmentData.notMetCount}`, 20, 120);
+            
+            // Save the PDF
+            doc.save(`${assessmentData.country}_BPALM_Assessment_Report.pdf`);
+        }
+
+        // Function to export to Excel
+        function exportToExcel() {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Create participants worksheet
+            const participantsData = assessmentData.participants.map(p => ({
+                Name: p.name,
+                Organization: p.org,
+                Email: p.email,
+                Phone: p.phone
+            }));
+            const participantsWs = XLSX.utils.json_to_sheet(participantsData);
+            XLSX.utils.book_append_sheet(wb, participantsWs, "Participants");
+            
+            // Create country data worksheet
+            const countryData = [{
+                Country: assessmentData.country,
+                Location: assessmentData.location,
+                'Workshop Date': assessmentData.workshopDate,
+                'TB Incidence Rate': assessmentData.countryData.tbIncidence,
+                'DR-TB Prevalence': assessmentData.countryData.drTbPrevalence,
+                'Treatment Success Rate': assessmentData.countryData.treatmentSuccess,
+                'DR-TB Patients': assessmentData.countryData.drTbPatients,
+                'Healthcare Facilities': assessmentData.countryData.healthFacilities,
+                'BPALM Experience': assessmentData.countryData.balmExperience
+            }];
+            const countryWs = XLSX.utils.json_to_sheet(countryData);
+            XLSX.utils.book_append_sheet(wb, countryWs, "Country Data");
+            
+            // Create facility assessment worksheet
+            const facilityData = [];
+            assessmentData.facilities.forEach(facility => {
+                facility.domains.forEach(domain => {
+                    domain.benchmarks.forEach(benchmark => {
+                        facilityData.push({
+                            Facility: facility.name,
+                            Type: facility.type,
+                            Location: facility.location,
+                            District: facility.district,
+                            Domain: translations[currentLanguage][domain.name],
+                            Benchmark: benchmark.name,
+                            Status: benchmark.status,
+                            Description: benchmark.description
+                        });
+                    });
+                });
+            });
+            const facilityWs = XLSX.utils.json_to_sheet(facilityData);
+            XLSX.utils.book_append_sheet(wb, facilityWs, "Facility Assessment");
+            
+            // Create national assessment worksheet
+            const assessmentResults = [];
+            assessmentData.dimensions.forEach(dimension => {
+                dimension.benchmarks.forEach(benchmark => {
+                    assessmentResults.push({
+                        Dimension: translations[currentLanguage][dimension.name],
+                        Standard: benchmark.name,
+                        Status: benchmark.status,
+                        Description: benchmark.description,
+                        'Action Plan': benchmark.action,
+                        Responsible: benchmark.responsible,
+                        Timeline: benchmark.timeline
+                    });
+                });
+            });
+            const assessmentWs = XLSX.utils.json_to_sheet(assessmentResults);
+            XLSX.utils.book_append_sheet(wb, assessmentWs, "National Assessment");
+            
+            // Create summary worksheet
+            const summaryData = [{
+                'Overall Score': assessmentData.overallScore,
+                'Preparedness Level': assessmentData.preparednessLevel,
+                'Standards Met': assessmentData.metCount,
+                'Standards Partially Met': assessmentData.partialCount,
+                'Standards Not Met': assessmentData.notMetCount,
+                'Facilities Assessed': assessmentData.facilities.length
+            }];
+            const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+            
+            // Save the Excel file
+            XLSX.writeFile(wb, `${assessmentData.country}_BPALM_Assessment_Data.xlsx`);
+        }
+
+        // Function to export to PowerPoint (simplified)
+        function exportToPowerPoint() {
+            alert(translations[currentLanguage]['ppt-export-message']);
+        }
+
+        // Initialize national assessment when showing the section
+        document.querySelector('button[onclick="showSection(\'assessment\')"]').addEventListener('click', function() {
+            initializeNationalAssessment();
+        });
+    </script>
+</body>
+</html>
